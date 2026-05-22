@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: study-assistant-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: study-assistant-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: FRONTEND_URL
+        value: https://abzaluly.github.io
+
+databases:
+  - name: study-assistant-db
+    databaseName: study_assistant
+    user: study_assistant
+    plan: free
