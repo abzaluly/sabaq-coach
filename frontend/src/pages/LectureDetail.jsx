@@ -119,12 +119,21 @@ export default function LectureDetail() {
   }
 
   const analyzeNotes = async () => {
+    const hasLecture = materials.some(m => m.source_label === 'lecture')
+    const hasNote    = materials.some(m => m.source_label === 'note')
+    if (!hasLecture || !hasNote) {
+      alert(`Загрузи оба файла:\n${!hasLecture ? '❌ Лекция (от преподавателя)\n' : '✅ Лекция загружена\n'}${!hasNote ? '❌ Конспект (твои записи)' : '✅ Конспект загружен'}`)
+      return
+    }
     setAnalyzing(true); setProgressW(0)
     try {
       const res = await aiAPI.analyzeNotes({ lecture_id: id, user_id: user.id, interests: user.interests || [] })
       setAnalysis(res.data)
       setTimeout(() => setProgressW(Math.round((res.data.understanding_estimate || 0) * 100)), 200)
-    } catch { alert('Убедись что загружены и лекция и конспект') }
+    } catch (err) {
+      const msg = err?.response?.data?.detail || err?.message || 'Неизвестная ошибка'
+      alert(`Ошибка анализа: ${msg}`)
+    }
     setAnalyzing(false)
   }
 
@@ -349,6 +358,26 @@ export default function LectureDetail() {
                   color: '#60a5fa',
                 }}>⭐ {it}</span>
               ))}
+            </div>
+
+            <div style={{ display: 'flex', gap: 8, marginBottom: 16 }}>
+              {[
+                { label: 'Лекция', key: 'lecture', icon: '📄' },
+                { label: 'Конспект', key: 'note', icon: '📝' },
+              ].map(({ label, key, icon }) => {
+                const has = materials.some(m => m.source_label === key)
+                return (
+                  <div key={key} style={{
+                    display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px',
+                    borderRadius: 10, fontSize: 12, fontWeight: 600,
+                    background: has ? 'rgba(16,185,129,.12)' : 'rgba(239,68,68,.1)',
+                    border: `1px solid ${has ? 'rgba(16,185,129,.3)' : 'rgba(239,68,68,.3)'}`,
+                    color: has ? '#34d399' : '#f87171',
+                  }}>
+                    {has ? '✅' : '❌'} {icon} {label}
+                  </div>
+                )
+              })}
             </div>
 
             <button
