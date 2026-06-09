@@ -256,12 +256,18 @@ def analyze_notes(data: AnalyzeRequest, db: Session = Depends(get_db)):
 
 @router.get("/debug")
 def debug_endpoint():
-    import traceback
+    import traceback, os
+    key = settings.OPENAI_API_KEY or ""
+    key_preview = f"{key[:8]}...{key[-4:]}" if len(key) > 12 else f"len={len(key)}"
     try:
-        test = client.models.list()
-        return {"openai": "ok", "models": str(test)[:100]}
+        test = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "user", "content": "say ok"}],
+            max_tokens=5,
+        )
+        return {"openai": "ok", "reply": test.choices[0].message.content, "key": key_preview}
     except Exception as e:
-        return {"openai_error": str(e), "trace": traceback.format_exc()[-500:]}
+        return {"openai_error": str(e), "key": key_preview, "trace": traceback.format_exc()[-600:]}
 
 @router.post("/explain")
 def explain_topic(data: ExplainRequest, db: Session = Depends(get_db)):
