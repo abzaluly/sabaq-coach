@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import { materialsAPI, aiAPI, quizzesAPI, lecturesAPI } from '../api'
 import ReactMarkdown from 'react-markdown'
 import { buildPptx } from '../utils/generatePptx'
+import { buildPdf }  from '../utils/generatePdf'
 import {
   Chart as ChartJS, CategoryScale, LinearScale, BarElement,
   Title, Tooltip, Legend, RadialLinearScale, PointElement,
@@ -80,6 +81,9 @@ export default function LectureDetail() {
 
   const [genPpt,       setGenPpt]       = useState(false)
   const [pptDone,      setPptDone]      = useState(false)
+  const [genPdf,       setGenPdf]       = useState(false)
+  const [pdfDone,      setPdfDone]      = useState(false)
+  const [presData,     setPresData]     = useState(null)
   const [newWeakTopics, setNewWeakTopics] = useState([])
   const [lectureTitle, setLectureTitle] = useState('')
 
@@ -161,22 +165,39 @@ export default function LectureDetail() {
     setAsking(false)
   }
 
+  const fetchPresData = async () => {
+    const res = await aiAPI.generatePresentation({
+      lecture_id: id,
+      interests: user.interests || [],
+      missing_topics: analysis.missing_topics || [],
+      incomplete_topics: analysis.incomplete_topics || [],
+      key_concepts: analysis.key_concepts || [],
+      weak_areas: analysis.weak_areas || [],
+    })
+    setPresData(res.data)
+    return res.data
+  }
+
   const createPresentation = async () => {
     if (!analysis) return
-    setGenPpt(true); setPptDone(false)
+    setGenPpt(true); setPptDone(false); setPdfDone(false)
     try {
-      const res = await aiAPI.generatePresentation({
-        lecture_id: id,
-        interests: user.interests || [],
-        missing_topics: analysis.missing_topics || [],
-        incomplete_topics: analysis.incomplete_topics || [],
-        key_concepts: analysis.key_concepts || [],
-        weak_areas: analysis.weak_areas || [],
-      })
-      await buildPptx(res.data.slides, res.data.interest, lectureTitle || 'Разбор слабых тем', res.data.entities || [], res.data.style || '')
+      const data = presData || await fetchPresData()
+      await buildPptx(data.slides, data.interest, lectureTitle || 'Разбор слабых тем', data.entities || [], data.style || '')
       setPptDone(true)
     } catch { alert('Ошибка при создании презентации') }
     setGenPpt(false)
+  }
+
+  const createPdf = async () => {
+    if (!analysis) return
+    setGenPdf(true); setPdfDone(false)
+    try {
+      const data = presData || await fetchPresData()
+      await buildPdf(data.slides, data.interest, lectureTitle || 'Разбор слабых тем', data.entities || [], data.style || '')
+      setPdfDone(true)
+    } catch (e) { alert('Ошибка при создании PDF: ' + (e?.message || e)) }
+    setGenPdf(false)
   }
 
   const generateQuiz = async () => {
@@ -589,24 +610,31 @@ export default function LectureDetail() {
                           Создать презентацию
                         </p>
                         <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginBottom: 14, lineHeight: 1.5 }}>
-                          AI создаст .pptx файл с разбором пропущенных и не до конца понятых тем — с примерами из твоих интересов
+                          AI создаст файл с разбором пропущенных и не до конца понятых тем — с примерами из твоих интересов
                         </p>
-                        <button
-                          className="btn btn-primary"
-                          onClick={createPresentation}
-                          disabled={genPpt}
-                          style={{
-                            background: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
-                            fontSize: 14, padding: '10px 20px',
-                          }}
-                        >
-                          {genPpt
-                            ? <><span className="spinner" /> Генерируем презентацию...</>
-                            : pptDone
-                              ? '✅ Скачать снова'
-                              : '📥 Создать PPTX презентацию'}
-                        </button>
-                        {pptDone && (
+                        <div style={{ display: 'flex', gap: 10, flexWrap: 'wrap' }}>
+                          <button
+                            className="btn btn-primary"
+                            onClick={createPresentation}
+                            disabled={genPpt || genPdf}
+                            style={{ background: 'linear-gradient(135deg,#7c3aed,#4f46e5)', fontSize: 14, padding: '10px 18px' }}
+                          >
+                            {genPpt
+                              ? <><span className="spinner" /> Генерируем...</>
+                              : pptDone ? '✅ PPTX снова' : '📥 Скачать PPTX'}
+                          </button>
+                          <button
+                            className="btn btn-primary"
+                            onClick={createPdf}
+                            disabled={genPpt || genPdf}
+                            style={{ background: 'linear-gradient(135deg,#dc2626,#b91c1c)', fontSize: 14, padding: '10px 18px' }}
+                          >
+                            {genPdf
+                              ? <><span className="spinner" /> Рендерим PDF...</>
+                              : pdfDone ? '✅ PDF снова' : '📄 Скачать PDF'}
+                          </button>
+                        </div>
+                        {(pptDone || pdfDone) && (
                           <p style={{ color: 'rgba(16,185,129,0.9)', fontSize: 12, marginTop: 8 }}>
                             ✅ Файл сохранён в папку Загрузки
                           </p>
