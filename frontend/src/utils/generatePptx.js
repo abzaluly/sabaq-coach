@@ -145,27 +145,26 @@ function slideTopic(prs, slide, num, total) {
   const M = 0.28
   const W = 10 - M * 2
 
-  // ── Full-bleed background image ──────────────────────────────────────────
+  // ── Full-bleed background image (no sizing — stretch to fill entire slide) ─
   if (hasImage) {
     try {
       sld.addImage({
         data: `image/${slide.image_ext || 'jpg'};base64,${slide.image_base64}`,
         x: 0, y: 0, w: 10, h: 5.63,
-        sizing: { type: 'cover', w: 10, h: 5.63 },
       })
     } catch (_) {}
-    // Dark gradient overlay so text stays readable
+    // Dark overlay: transparency:15 = 85% opaque dark cover
     sld.addShape('rect', {
       x: 0, y: 0, w: 10, h: 5.63,
-      fill: { color: '08051A', transparency: 22 },
-      line: { color: '08051A', transparency: 100 },
+      fill: { color: '07040F', transparency: 15 },
+      line: { color: '07040F', transparency: 100 },
     })
   }
 
   // ── Header bar ───────────────────────────────────────────────────────────
   sld.addShape('rect', {
     x: 0, y: 0, w: 10, h: 1.06,
-    fill: { color: hasImage ? '04020F' : C.card, transparency: hasImage ? 30 : 0 },
+    fill: { color: '060310', transparency: hasImage ? 20 : 0 },
     line: { color: '000000', transparency: 100 },
   })
   rect(sld, 0, 0, 0.14, 1.06, C.purple)
@@ -185,18 +184,24 @@ function slideTopic(prs, slide, num, total) {
     fontSize: 20, bold: true, align: 'center', valign: 'middle',
   })
 
-  // ── Two columns: Explanation (left 60%) + Key Facts infographic (right 40%) ──
-  const colY = 1.14
-  const colH = 2.38
-  const gap  = 0.16
+  // ── Layout: fills full slide height (5.63") ───────────────────────────────
+  // header=1.06, gap=0.08, colH+exH+remH fill the rest
+  const colY  = 1.14
+  const colH  = 2.55   // explanation + facts columns
+  const gap   = 0.16
   const leftW  = 5.5
   const rightW = W - leftW - gap
+
+  const exY   = colY + colH + 0.12   // 3.81
+  const exH   = 1.20
+  const remY  = exY + exH + 0.10     // 5.11
+  // remH = 0.42 → ends at 5.53, slide ends 5.63 ✓
 
   // Left: Explanation card
   sld.addShape('roundRect', {
     x: M, y: colY, w: leftW, h: colH,
-    fill: { color: C.card2, transparency: hasImage ? 18 : 0 },
-    line: { color: C.purple, transparency: 48 },
+    fill: { color: C.card2, transparency: hasImage ? 15 : 0 },
+    line: { color: C.purple, transparency: 45 },
     rectRadius: 0.12,
   })
   txt(sld, '📖  Объяснение', M + 0.18, colY + 0.1, leftW - 0.36, 0.28, {
@@ -210,7 +215,7 @@ function slideTopic(prs, slide, num, total) {
   const kpX = M + leftW + gap
   sld.addShape('roundRect', {
     x: kpX, y: colY, w: rightW, h: colH,
-    fill: { color: C.card2, transparency: hasImage ? 18 : 0 },
+    fill: { color: C.card2, transparency: hasImage ? 15 : 0 },
     line: { color: C.blue, transparency: 42 },
     rectRadius: 0.12,
   })
@@ -218,51 +223,47 @@ function slideTopic(prs, slide, num, total) {
     fontSize: 10, bold: true, color: C.blueL,
   })
   const factColors = [C.purple, C.blue, C.green]
+  const factStep = (colH - 0.46) / 3
   ;(slide.key_points || []).slice(0, 3).forEach((pt, i) => {
-    const fy = colY + 0.44 + i * 0.62
-    // Numbered circle
+    const fy = colY + 0.44 + i * factStep
     sld.addShape('ellipse', {
-      x: kpX + 0.14, y: fy + 0.04, w: 0.32, h: 0.32,
-      fill: { color: factColors[i] || C.purple, transparency: 45 },
-      line: { color: factColors[i] || C.purple, transparency: 20 },
+      x: kpX + 0.14, y: fy + 0.04, w: 0.34, h: 0.34,
+      fill: { color: factColors[i] || C.purple, transparency: 42 },
+      line: { color: factColors[i] || C.purple, transparency: 18 },
     })
-    txt(sld, `${i + 1}`, kpX + 0.14, fy + 0.04, 0.32, 0.32, {
+    txt(sld, `${i + 1}`, kpX + 0.14, fy + 0.04, 0.34, 0.34, {
       fontSize: 11, bold: true, color: C.white, align: 'center', valign: 'middle',
     })
-    txt(sld, pt, kpX + 0.52, fy, rightW - 0.66, 0.4, {
+    txt(sld, pt, kpX + 0.54, fy, rightW - 0.7, factStep - 0.06, {
       fontSize: 11, valign: 'middle',
     })
   })
 
   // ── Interest example (full width) ────────────────────────────────────────
-  const exY = colY + colH + 0.12
-  const exH = 0.94
   sld.addShape('roundRect', {
     x: M, y: exY, w: W, h: exH,
-    fill: { color: C.dark, transparency: hasImage ? 18 : 0 },
-    line: { color: C.purple, transparency: 30 },
+    fill: { color: C.dark, transparency: hasImage ? 15 : 0 },
+    line: { color: C.purple, transparency: 28 },
     rectRadius: 0.12,
   })
-  txt(sld, '⭐  Пример из твоих интересов', M + 0.18, exY + 0.08, W - 0.36, 0.26, {
+  txt(sld, '⭐  Пример из твоих интересов', M + 0.18, exY + 0.08, W - 0.36, 0.28, {
     fontSize: 10, bold: true, color: C.purpleL,
   })
-  txt(sld, slide.interest_example || '', M + 0.18, exY + 0.34, W - 0.36, exH - 0.42, {
+  txt(sld, slide.interest_example || '', M + 0.18, exY + 0.38, W - 0.36, exH - 0.46, {
     fontSize: 12, valign: 'top',
   })
 
-  // ── Remember footer ──────────────────────────────────────────────────────
-  if (slide.remember) {
-    const remY = exY + exH + 0.1
-    sld.addShape('roundRect', {
-      x: M, y: remY, w: W, h: 0.4,
-      fill: { color: C.green, transparency: 70 },
-      line: { color: C.green, transparency: 38 },
-      rectRadius: 0.08,
-    })
-    txt(sld, `💡  ${slide.remember}`, M + 0.18, remY, W - 0.36, 0.4, {
-      fontSize: 12, bold: true, color: C.white, valign: 'middle',
-    })
-  }
+  // ── Remember footer (always shown, fills to bottom) ──────────────────────
+  const remText = slide.remember ? `💡  ${slide.remember}` : `💡  Запомни эту тему!`
+  sld.addShape('roundRect', {
+    x: M, y: remY, w: W, h: 0.42,
+    fill: { color: C.green, transparency: 68 },
+    line: { color: C.green, transparency: 35 },
+    rectRadius: 0.08,
+  })
+  txt(sld, remText, M + 0.18, remY, W - 0.36, 0.42, {
+    fontSize: 12, bold: true, color: C.white, valign: 'middle',
+  })
 }
 
 // ── Final slide ────────────────────────────────────────────────────────────
