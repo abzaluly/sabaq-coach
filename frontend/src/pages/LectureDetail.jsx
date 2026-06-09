@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useLayoutEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { materialsAPI, aiAPI, quizzesAPI } from '../api'
+import { materialsAPI, aiAPI, quizzesAPI, lecturesAPI } from '../api'
 import ReactMarkdown from 'react-markdown'
 import { buildPptx } from '../utils/generatePptx'
 import {
@@ -81,6 +81,7 @@ export default function LectureDetail() {
   const [genPpt,       setGenPpt]       = useState(false)
   const [pptDone,      setPptDone]      = useState(false)
   const [newWeakTopics, setNewWeakTopics] = useState([])
+  const [lectureTitle, setLectureTitle] = useState('')
 
   const scoreDisplay = useCounter(result?.percentage ?? 0, !!result)
 
@@ -93,7 +94,11 @@ export default function LectureDetail() {
   }, [tab])
 
   /* ── data loading ──────────────────────────── */
-  useEffect(() => { loadMaterials(); loadQuizzes() }, [])
+  useEffect(() => {
+    loadMaterials()
+    loadQuizzes()
+    lecturesAPI.getById(id).then(r => setLectureTitle(r.data.title || '')).catch(() => {})
+  }, [])
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
   }, [chatMessages, asking])
@@ -168,7 +173,7 @@ export default function LectureDetail() {
         key_concepts: analysis.key_concepts || [],
         weak_areas: analysis.weak_areas || [],
       })
-      await buildPptx(res.data.slides, res.data.interest, `Лекция ${id}`, res.data.entities || [], res.data.style || '')
+      await buildPptx(res.data.slides, res.data.interest, lectureTitle || 'Разбор слабых тем', res.data.entities || [], res.data.style || '')
       setPptDone(true)
     } catch { alert('Ошибка при создании презентации') }
     setGenPpt(false)

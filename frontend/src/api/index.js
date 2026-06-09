@@ -44,6 +44,7 @@ export const subjectsAPI = {
 
 export const lecturesAPI = {
   getAll: (subject_id) => api.get(`/lectures/?subject_id=${subject_id}`),
+  getById: (id) => api.get(`/lectures/${id}`),
   create: (data) => api.post('/lectures/', data),
   delete: (id) => api.delete(`/lectures/${id}`),
 }
