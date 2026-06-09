@@ -1,12 +1,34 @@
 import axios from 'axios'
 
-const api = axios.create({ baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api' })
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+
+const api = axios.create({ baseURL: BASE_URL, timeout: 90000 })
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   if (token) config.headers.Authorization = `Bearer ${token}`
   return config
 })
+
+// Auto-retry on Network Error (Render cold start can take 30-60s)
+api.interceptors.response.use(
+  res => res,
+  async (error) => {
+    const config = error.config
+    if (!config) return Promise.reject(error)
+    config._retryCount = config._retryCount || 0
+    const isNetworkError = !error.response
+    if (isNetworkError && config._retryCount < 4) {
+      config._retryCount++
+      await new Promise(r => setTimeout(r, 12000))
+      return api(config)
+    }
+    return Promise.reject(error)
+  }
+)
+
+export const pingBackend = () =>
+  axios.get(BASE_URL.replace('/api', '/'), { timeout: 90000 }).catch(() => {})
 
 export const authAPI = {
   register: (data) => api.post('/auth/register', data),

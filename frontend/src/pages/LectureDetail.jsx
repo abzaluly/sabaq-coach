@@ -146,8 +146,12 @@ export default function LectureDetail() {
     try {
       const res = await aiAPI.explain({ lecture_id: id, question: text, user_id: user.id, interests: user.interests || [], chat_history: chatMessages })
       setChatMessages([...newMsgs, { role: 'assistant', content: res.data.answer, image_url: res.data.image_url }])
-    } catch {
-      setChatMessages([...newMsgs, { role: 'assistant', content: '❌ Ошибка. Попробуй снова.' }])
+    } catch (err) {
+      const isNetwork = !err?.response
+      const msg = isNetwork
+        ? '⏳ Сервер просыпается (~30 сек), отправь вопрос ещё раз.'
+        : `❌ Ошибка: ${err?.response?.data?.detail || 'попробуй снова'}`
+      setChatMessages([...newMsgs, { role: 'assistant', content: msg }])
     }
     setAsking(false)
   }
@@ -179,7 +183,12 @@ export default function LectureDetail() {
       })
       setActiveQuiz(res.data); setAnswers({}); setResult(null)
       await loadQuizzes()
-    } catch { alert('Ошибка. Убедись что загружены материалы.') }
+    } catch (err) {
+      const isNetwork = !err?.response
+      alert(isNetwork
+        ? 'Сервер просыпается (~30 сек). Попробуй снова через полминуты.'
+        : `Ошибка: ${err?.response?.data?.detail || 'Убедись что загружены материалы.'}`)
+    }
     setGenerating(false)
   }
 
