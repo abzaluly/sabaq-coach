@@ -47,6 +47,21 @@ describe("points_ledger: очки пишет только сервер", () => {
       expect(del?.message).toBe("points_ledger is append-only");
     }));
 
+  it("удаление аккаунта каскадно удаляет его журнал, прямое удаление — нет", () =>
+    tx(async (db) => {
+      const alice = await createUser(db);
+      const bob = await createUser(db);
+      const group = await createGroup(db, alice, { members: [bob] });
+      await db.query(
+        `insert into public.points_ledger (group_id, user_id, event_type, amount, reason, idempotency_key)
+         values ($1, $2, 'checkin', 10, 'x', 'k-del')`,
+        [group, bob],
+      );
+      expect((await attempt(db, "delete from public.points_ledger where user_id = $1", [bob]))?.message).toBe("points_ledger is append-only");
+      await db.query("delete from auth.users where id = $1", [bob]);
+      expect((await db.query("select 1 from public.points_ledger where user_id = $1", [bob])).rows).toHaveLength(0);
+    }));
+
   it("повторная запись с тем же ключом идемпотентности отклоняется", () =>
     tx(async (db) => {
       const alice = await createUser(db);

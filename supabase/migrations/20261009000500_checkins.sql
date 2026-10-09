@@ -72,6 +72,7 @@ begin
     select id from public.checkins
      where status = 'pending' and review_until <= app_private.now()
      order by review_until
+     limit 2000 -- порция за тик: короткие транзакции, остаток — в следующий запуск
      for update skip locked
   loop
     perform app_private.decide_checkin(v_id);

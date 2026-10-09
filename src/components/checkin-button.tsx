@@ -18,6 +18,25 @@ type Props = {
   label?: string;
 };
 
+/** Vercel принимает тело запроса до 4,5 МБ. Большие фото уменьшаем в браузере. */
+const MAX_DIRECT_UPLOAD = 3.5 * 1024 * 1024;
+
+async function shrink(file: File): Promise<File> {
+  if (file.size <= MAX_DIRECT_UPLOAD) return file; // оригинал с EXIF — сервер проверит дату съёмки
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, 2048 / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext("2d")!.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    const blob = await new Promise<Blob | null>((r) => canvas.toBlob(r, "image/jpeg", 0.85));
+    return blob ? new File([blob], "photo.jpg", { type: "image/jpeg" }) : file;
+  } catch {
+    return file;
+  }
+}
+
 /**
  * Отметка за ≤ 2 нажатия: «Отметка» — сразу; «Фото» — кнопка открывает камеру
  * (capture), снимок отправляется автоматически; «Фото + текст» — после снимка поле текста.
@@ -44,7 +63,7 @@ export function CheckinButton({ habitId, proofType, previousDay = false, variant
     const body = new FormData();
     body.set("habit_id", habitId);
     if (previousDay) body.set("previous_day", "1");
-    if (file) body.set("photo", file);
+    if (file) body.set("photo", await shrink(file));
     if (text) body.set("note", text);
     try {
       const res = await fetch("/api/checkins", { method: "POST", body });

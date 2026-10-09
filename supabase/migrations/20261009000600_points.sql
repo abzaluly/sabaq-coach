@@ -247,6 +247,7 @@ begin
        and not exists (select 1 from public.checkins c
                         where c.habit_id = p.habit_id and c.period_start = p.period_start and c.status = 'pending')
      order by p.period_end
+     limit 2000 -- порция за тик; периоды упорядочены, поэтому стрики считаются по порядку
      for update of p skip locked
   loop
     perform app_private.settle_period(v_p.id);

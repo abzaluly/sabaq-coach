@@ -147,6 +147,22 @@ describe("группы и инвайты", () => {
     }));
 });
 
+describe("удаление аккаунта", () => {
+  it("владелец удалил аккаунт — группа остаётся, владение переходит админу", () =>
+    tx(async (db) => {
+      const [a, b, c] = [await createUser(db), await createUser(db), await createUser(db)];
+      const g = await createGroup(db, a, { members: [b, c] });
+      await db.query("update public.group_members set role = 'admin' where user_id = $1", [c]);
+      await db.query("insert into public.invites (group_id, code, created_by) values ($1, 'ZZZZ2222', $2)", [g, a]);
+      await db.query("delete from auth.users where id = $1", [a]);
+      const { rows } = await db.query("select user_id, role from public.group_members where group_id = $1 order by role", [g]);
+      expect(rows).toEqual([
+        { user_id: c, role: "owner" },
+        { user_id: b, role: "member" },
+      ]);
+    }));
+});
+
 describe("привычки и одобрение", () => {
   it("в группе из одного человека привычка одобряется сразу", () =>
     tx(async (db) => {

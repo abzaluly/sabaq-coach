@@ -70,13 +70,13 @@ export default async function HomePage() {
           <Card className="text-muted">{t("noGroups")}</Card>
         )}
         <div className="mt-4 grid grid-cols-2 gap-3">
-          <Button asChild size="lg">
+          <Button asChild size="lg" className="whitespace-nowrap px-3">
             <Link href="/groups/new">
               <Plus />
               {t("createGroup")}
             </Link>
           </Button>
-          <Button asChild size="lg" variant="secondary">
+          <Button asChild size="lg" variant="secondary" className="whitespace-nowrap px-3">
             <Link href="/join">
               <Ticket />
               {t("joinGroup")}

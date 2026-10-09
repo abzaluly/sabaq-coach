@@ -19,7 +19,12 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
-    "icons": "vitest run --config scripts/icons.config.ts"
+    "icons": "vitest run --config scripts/icons.config.ts",
+    "seed:demo": "node scripts/seed-demo.mjs",
+    "load-test": "node scripts/load-test.mjs",
+    "stack:setup": "scripts/local-stack/setup.sh",
+    "stack:start": "scripts/local-stack/start.sh",
+    "stack:stop": "scripts/local-stack/stop.sh"
   },
   "dependencies": {
     "@radix-ui/react-slot": "1.4.0",

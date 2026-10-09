@@ -1,72 +1,34 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for Claude Code when working in this repository.
 
-## Project Overview
+## Project
 
-AI-powered study assistant for Kazakh/Russian-speaking students. Students upload lecture materials and personal notes; the app uses OpenAI (gpt-4o-mini) to analyze gaps, answer questions, generate SVG visualizations, and create targeted quizzes.
+**Orle** — group habit tracker with gamification and honest, group-verified check-ins. Next.js 16 (App Router, TS strict) + Supabase (Auth, Postgres + RLS, Storage, Realtime, pg_cron). UI language: Russian (next-intl; kk/en planned). See README.md for the full picture (scoring formula, anti-cheat layers, deploy).
+
+> `backend/` and `frontend/` are the previous project (Sabaq study assistant) and are not part of Orle; they are excluded from lint/tsconfig and slated for removal.
 
 ## Commands
 
-### Frontend (`frontend/`)
 ```bash
-npm run dev      # Dev server on http://localhost:5173
-npm run build    # Production bundle
-npm run lint     # ESLint check
-npm run preview  # Preview production build
+pnpm dev | build | lint | typecheck
+pnpm test                 # Vitest: unit + DB tests (needs Postgres ≥15, TEST_DATABASE_URL, default postgres:postgres@127.0.0.1:5432)
+pnpm test:e2e             # Playwright; E2E_BACKEND=1 for full flows against a running Supabase
+pnpm stack:setup / stack:start / stack:stop   # Supabase without Docker (scripts/local-stack)
+pnpm seed:demo            # demo group, 4 people, 3 weeks of history
+pnpm load-test            # synthetic data + EXPLAIN ANALYZE of key queries
+pnpm icons                # regenerate PWA icons from the SVG character
 ```
 
-### Backend (repo root or `backend/`)
-```bash
-# Activate venv first
-source backend/venv/bin/activate
+In cloud containers: start Postgres with `pg_ctlcluster 16 main start`; Chromium is at `/opt/pw-browsers/chromium` (`PLAYWRIGHT_CHROMIUM_PATH`).
 
-uvicorn main:app --reload          # Dev server on http://localhost:8000
-uvicorn main:app --reload --port 8000  # Explicit port
-```
+## Architecture rules (keep them)
 
-No test runner is configured — there are no test files in the project.
-
-## Architecture
-
-### Frontend (React + Vite, no TypeScript)
-- **Routing**: React Router v7 with a `PrivateRoute` wrapper that checks `localStorage` for a JWT token
-- **API layer**: Single Axios instance in `src/api/index.js` — base URL `http://localhost:8000/api`, JWT injected via request interceptor
-- **State**: Local `useState`/`useEffect` only — no Redux or Context
-- **Main feature page**: `src/pages/LectureDetail.jsx` (873 lines) — handles material upload, AI analysis, chat Q&A, SVG visualization, quiz generation, and Chart.js progress charts
-
-### Backend (FastAPI + SQLAlchemy + SQLite)
-- `main.py` — app factory, CORS configured for `localhost:5173`, mounts all routers under `/api`
-- `app/database.py` — SQLAlchemy engine + `SessionLocal`; tables created via `Base.metadata.create_all` on startup
-- `app/config.py` — Pydantic `Settings` reads from `backend/.env`
-- Routers in `app/routers/`: `auth`, `subjects`, `lectures`, `materials`, `ai`, `quizzes`, `progress`
-
-### Database schema (SQLite, file: `backend/study_assistant.db`)
-```
-users → subjects → lectures → materials
-                           → quizzes → quiz_questions
-                                    → quiz_attempts
-                           → progress
-```
-- `materials.source_label`: `"lecture"` or `"note"` (distinguishes uploaded lecture PDFs from student notes)
-- `materials.extracted_text`: full text stored for AI consumption
-- `progress.weak_topics`: JSON array used by quiz generation to focus on gaps
-
-### AI integration (`app/routers/ai.py`, `app/routers/quizzes.py`)
-- Model: `gpt-4o-mini` via OpenAI SDK
-- **analyze-notes**: compares lecture text vs. student note text, returns gap analysis in Russian
-- **explain**: Q&A with optional student interest context (personalized analogies)
-- **quiz-svg**: generates raw SVG markup to visually illustrate a concept
-- **quizzes/generate**: creates multiple-choice questions focused on `weak_topics`, avoids repeating past questions
-
-### File processing (`app/routers/materials.py`)
-- PDF text extraction via PyMuPDF (`fitz`); falls back to pytesseract OCR for scanned/handwritten docs
-- Uploaded files stored in `backend/uploads/`
-
-## Key conventions
-
-- UI text and AI prompts are in **Russian** (target audience: Kazakh students)
-- Inline styles dominate the frontend — no separate CSS files or CSS-in-JS library
-- The Anthropic SDK is installed (`anthropic==0.86.0`) but all active AI calls go through OpenAI
-- CORS is hardcoded to `http://localhost:5173` — update `main.py` for any other frontend origin
-- JWT expiry is 1 week (`ACCESS_TOKEN_EXPIRE_MINUTES=10080`)
+- **Clients only read.** `authenticated` has SELECT (RLS: own groups) plus writes to `notification_prefs`/`push_subscriptions`. Every other write goes through `SECURITY DEFINER` functions in `supabase/migrations/*` with `set search_path = ''`.
+- **New RPC function** → add an explicit `grant execute … to authenticated` (or service_role) AND add it to the whitelist in `tests/db/grants.test.ts`.
+- **New error code** raised via `app_private.raise_error('code')` → add to `RPC_ERROR_CODES` in `src/lib/rpc.ts` and `messages/ru.json` `errors.*` (unit test enforces).
+- **Points** only via `app_private.credit()` into the append-only `points_ledger` with a unique idempotency key. Never UPDATE/DELETE the ledger.
+- **Server time** is `app_private.now()` (tests freeze it via `app_private.test_clock`). Local dates use the group timezone.
+- **Coefficients** live in `config/scoring.ts` and must match `app_private.default_scoring_config()/default_rules()` (config-sync test).
+- Migrations are numbered `20261009000N00_*.sql`; add new ones rather than editing applied ones once deployed.
+- UI: Tailwind tokens (`bg-surface`, `text-muted`, `bg-primary`…), mobile-first, tap targets ≥ 44px, all strings in `messages/ru.json`.
