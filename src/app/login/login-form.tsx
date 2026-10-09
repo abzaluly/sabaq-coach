@@ -8,15 +8,22 @@ import { Card } from "@/components/ui/card";
 import { FieldError, Input, Label } from "@/components/ui/input";
 import { publicEnv } from "@/lib/env";
 import { createClient } from "@/lib/supabase/client";
-import { emailSchema, otpSchema } from "@/lib/validation";
+import { cn } from "@/lib/utils";
+import { emailSchema, normalizePhone, otpSchema } from "@/lib/validation";
 
 const RESEND_SECONDS = 30;
+// SMS-вход включается, когда настроен провайдер (см. README → «SMS»).
+const SMS_ENABLED = process.env.NEXT_PUBLIC_SMS_ENABLED === "true";
+
+type Channel = "email" | "phone";
 
 export function LoginForm({ linkError, next = "/" }: { linkError?: string; next?: string }) {
   const t = useTranslations();
   const router = useRouter();
-  const [step, setStep] = useState<"email" | "code">("email");
+  const [channel, setChannel] = useState<Channel>("email");
+  const [step, setStep] = useState<"address" | "code">("address");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
   const [code, setCode] = useState("");
   const [error, setError] = useState<string | undefined>(linkError);
   const [pending, setPending] = useState(false);
@@ -30,19 +37,26 @@ export function LoginForm({ linkError, next = "/" }: { linkError?: string; next?
 
   async function sendCode(e?: FormEvent) {
     e?.preventDefault();
-    const parsed = emailSchema.safeParse(email.trim());
-    if (!parsed.success) return setError(t("login.invalidEmail"));
-    setPending(true);
-    setError(undefined);
-    const { error } = await createClient().auth.signInWithOtp({
-      email: parsed.data,
-      options: {
-        shouldCreateUser: true,
-        emailRedirectTo: `${publicEnv.NEXT_PUBLIC_SITE_URL}/auth/confirm`,
-      },
-    });
+    const supabase = createClient();
+    let result;
+    if (channel === "email") {
+      const parsed = emailSchema.safeParse(email.trim());
+      if (!parsed.success) return setError(t("login.invalidEmail"));
+      setPending(true);
+      setError(undefined);
+      result = await supabase.auth.signInWithOtp({
+        email: parsed.data,
+        options: { shouldCreateUser: true, emailRedirectTo: `${publicEnv.NEXT_PUBLIC_SITE_URL}/auth/confirm` },
+      });
+    } else {
+      const normalized = normalizePhone(phone);
+      if (!normalized) return setError(t("login.invalidPhone"));
+      setPending(true);
+      setError(undefined);
+      result = await supabase.auth.signInWithOtp({ phone: normalized, options: { shouldCreateUser: true } });
+    }
     setPending(false);
-    if (error) return setError(t("errors.generic"));
+    if (result.error) return setError(t(result.error.status === 429 ? "errors.rate_limited" : "errors.generic"));
     setStep("code");
     setCooldown(RESEND_SECONDS);
   }
@@ -53,7 +67,11 @@ export function LoginForm({ linkError, next = "/" }: { linkError?: string; next?
     if (!parsed.success) return setError(t("login.invalidCode"));
     setPending(true);
     setError(undefined);
-    const { error } = await createClient().auth.verifyOtp({ email: email.trim(), token: parsed.data, type: "email" });
+    const supabase = createClient();
+    const { error } =
+      channel === "email"
+        ? await supabase.auth.verifyOtp({ email: email.trim(), token: parsed.data, type: "email" })
+        : await supabase.auth.verifyOtp({ phone: normalizePhone(phone)!, token: parsed.data, type: "sms" });
     if (error) {
       setPending(false);
       return setError(t("login.linkFailed"));
@@ -62,30 +80,69 @@ export function LoginForm({ linkError, next = "/" }: { linkError?: string; next?
     router.refresh();
   }
 
-  if (step === "email") {
+  if (step === "address") {
     return (
       <Card>
         <form onSubmit={sendCode} noValidate>
           <h2 className="text-xl font-bold">{t("login.title")}</h2>
-          <p className="mb-5 mt-1 text-sm text-muted">{t("login.subtitle")}</p>
-          <Label htmlFor="email">{t("login.emailLabel")}</Label>
-          <Input
-            id="email"
-            type="email"
-            inputMode="email"
-            autoComplete="email"
-            autoFocus
-            placeholder={t("login.emailPlaceholder")}
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            aria-invalid={Boolean(error)}
-            aria-describedby={error ? "login-error" : undefined}
-          />
+          <p className="mb-5 mt-1 text-sm text-muted">{t(channel === "email" ? "login.subtitle" : "login.subtitlePhone")}</p>
+          {SMS_ENABLED && (
+            <div role="tablist" aria-label={t("login.channel")} className="mb-4 grid grid-cols-2 gap-1 rounded-xl bg-surface-2 p-1">
+              {(["email", "phone"] as const).map((c) => (
+                <button
+                  key={c}
+                  type="button"
+                  role="tab"
+                  aria-selected={channel === c}
+                  onClick={() => {
+                    setChannel(c);
+                    setError(undefined);
+                  }}
+                  className={cn("min-h-11 rounded-lg text-sm font-bold", channel === c ? "bg-surface shadow" : "text-muted")}
+                >
+                  {t(c === "email" ? "login.emailTab" : "login.phoneTab")}
+                </button>
+              ))}
+            </div>
+          )}
+          {channel === "email" ? (
+            <>
+              <Label htmlFor="email">{t("login.emailLabel")}</Label>
+              <Input
+                id="email"
+                type="email"
+                inputMode="email"
+                autoComplete="email"
+                autoFocus
+                placeholder={t("login.emailPlaceholder")}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "login-error" : undefined}
+              />
+            </>
+          ) : (
+            <>
+              <Label htmlFor="phone">{t("login.phoneLabel")}</Label>
+              <Input
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                autoFocus
+                placeholder="+7 700 123 45 67"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "login-error" : undefined}
+              />
+            </>
+          )}
           <FieldError id="login-error">{error}</FieldError>
           <Button type="submit" size="lg" className="mt-5 w-full" disabled={pending}>
             {pending ? t("common.loading") : t("login.sendCode")}
           </Button>
-          <p className="mt-4 text-center text-xs text-muted">{t("login.phoneSoon")}</p>
+          {!SMS_ENABLED && <p className="mt-4 text-center text-xs text-muted">{t("login.phoneSoon")}</p>}
         </form>
       </Card>
     );
@@ -94,9 +151,9 @@ export function LoginForm({ linkError, next = "/" }: { linkError?: string; next?
   return (
     <Card>
       <form onSubmit={verify} noValidate>
-        <h2 className="text-xl font-bold">{t("login.codeSentTo", { email: email.trim() })}</h2>
-        <p className="mb-5 mt-1 text-sm text-muted">{t("login.codeHint")}</p>
-        <Label htmlFor="code">{t("login.codeLabel")}</Label>
+        <h2 className="text-xl font-bold">{t("login.codeSentTo", { email: channel === "email" ? email.trim() : normalizePhone(phone) ?? phone })}</h2>
+        <p className="mb-5 mt-1 text-sm text-muted">{t(channel === "email" ? "login.codeHint" : "login.codeHintPhone")}</p>
+        <Label htmlFor="code">{t(channel === "email" ? "login.codeLabel" : "login.codeLabelPhone")}</Label>
         <Input
           id="code"
           inputMode="numeric"
@@ -119,12 +176,12 @@ export function LoginForm({ linkError, next = "/" }: { linkError?: string; next?
             type="button"
             variant="ghost"
             onClick={() => {
-              setStep("email");
+              setStep("address");
               setCode("");
               setError(undefined);
             }}
           >
-            {t("login.changeEmail")}
+            {t(channel === "email" ? "login.changeEmail" : "login.changePhone")}
           </Button>
           <Button type="button" variant="ghost" disabled={cooldown > 0 || pending} onClick={() => sendCode()}>
             {cooldown > 0 ? t("login.resendIn", { seconds: cooldown }) : t("login.resend")}

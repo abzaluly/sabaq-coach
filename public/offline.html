@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Orle — нет сети</title>
+    <style>
+      :root { color-scheme: light dark; }
+      body { margin: 0; min-height: 100dvh; display: grid; place-items: center; font-family: system-ui, sans-serif; background: #fff8f0; color: #2b2118; text-align: center; padding: 16px; }
+      @media (prefers-color-scheme: dark) { body { background: #231a14; color: #f5ede4; } }
+      button { margin-top: 16px; min-height: 48px; padding: 0 24px; border: 0; border-radius: 12px; background: #c2410c; color: #fff; font-size: 16px; font-weight: 700; }
+    </style>
+  </head>
+  <body>
+    <main>
+      <img src="/icons/icon-192.png" width="96" height="96" alt="" />
+      <h1>Нет соединения</h1>
+      <p>Отметки и очки считает сервер, поэтому без сети их не показать.<br />Проверьте интернет и попробуйте снова.</p>
+      <button onclick="location.reload()">Обновить</button>
+    </main>
+  </body>
+</html>

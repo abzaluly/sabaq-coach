@@ -1,3 +1,4 @@
+import { Settings } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Character } from "@/components/character";
@@ -23,6 +24,11 @@ export default async function AppLayout({ children }: { children: React.ReactNod
         </Link>
         <div className="flex items-center gap-1">
           <ThemeToggle />
+          <Button asChild variant="ghost" size="icon">
+            <Link href="/settings" aria-label={t("settingsPage.title")}>
+              <Settings />
+            </Link>
+          </Button>
           <form action="/auth/signout" method="post">
             <Button variant="ghost" type="submit">
               {t("common.signOut")}

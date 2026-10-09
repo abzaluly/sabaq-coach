@@ -18,7 +18,8 @@
     "test:e2e": "playwright test",
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
-    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts"
+    "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
+    "icons": "vitest run --config scripts/icons.config.ts"
   },
   "dependencies": {
     "@radix-ui/react-slot": "1.4.0",
@@ -35,6 +36,7 @@
     "server-only": "0.0.1",
     "sharp": "0.34.5",
     "tailwind-merge": "3.7.0",
+    "web-push": "3.6.7",
     "zod": "4.6.5"
   },
   "devDependencies": {
@@ -44,6 +46,7 @@
     "@types/pg": "8.23.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
+    "@types/web-push": "3.6.4",
     "eslint": "9.39.5",
     "eslint-config-next": "16.4.0",
     "pg": "8.23.1",

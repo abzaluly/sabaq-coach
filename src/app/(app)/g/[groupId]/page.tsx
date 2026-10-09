@@ -1,4 +1,4 @@
-import { CheckCircle2, Flame, Shield } from "lucide-react";
+import { CheckCircle2, Flame, Shield, Trophy } from "lucide-react";
 import { getFormatter, getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Celebrate } from "@/components/celebrate";
@@ -6,6 +6,7 @@ import { Character } from "@/components/character";
 import { Card } from "@/components/ui/card";
 import { getArena } from "@/lib/arena";
 import { getGroupContext } from "@/lib/group";
+import { createClient } from "@/lib/supabase/server";
 import { cn } from "@/lib/utils";
 import { LeaveGroup } from "./leave-group";
 
@@ -13,7 +14,11 @@ import { LeaveGroup } from "./leave-group";
 export default async function ArenaPage({ params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = await params;
   const { members, me, season } = await getGroupContext(groupId);
-  const arena = await getArena(groupId);
+  const supabase = await createClient();
+  const [arena, { data: lastClosed }] = await Promise.all([
+    getArena(groupId),
+    supabase.from("seasons").select("id, number, closed_at").eq("group_id", groupId).eq("status", "closed").order("number", { ascending: false }).limit(1).maybeSingle(),
+  ]);
   const t = await getTranslations("arena");
   const format = await getFormatter();
   const sorted = [...members].sort((a, b) => (arena.get(b.user_id)?.season_points ?? 0) - (arena.get(a.user_id)?.season_points ?? 0));
@@ -22,6 +27,14 @@ export default async function ArenaPage({ params }: { params: Promise<{ groupId:
   return (
     <section className="space-y-4">
       {mine && <Celebrate scope={groupId} level={mine.level} streak={mine.best_streak} points={mine.total_points} />}
+      {lastClosed && (
+        <Link
+          href={`/g/${groupId}/season/${lastClosed.id}`}
+          className="flex min-h-12 items-center gap-2 rounded-2xl bg-amber-400/25 px-4 py-3 font-bold focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring"
+        >
+          <Trophy className="size-5 text-amber-600" /> {t("seasonResults", { number: lastClosed.number })}
+        </Link>
+      )}
       {season && <p className="text-sm font-semibold text-muted">{t("season", { number: season.number, ends: format.dateTime(new Date(`${season.ends_on}T00:00:00`), { day: "numeric", month: "long" }) })}</p>}
       <ul className="grid grid-cols-2 gap-3">
         {sorted.map((m) => {

@@ -45,7 +45,7 @@ export async function signUp(browser: Browser, opts: { name: string; nickname: s
 
 export async function createGroup(page: Page, name: string) {
   await page.goto("/");
-  await page.getByRole("link", { name: "Создать группу" }).click();
+  await page.getByRole("link", { name: "Новая группа" }).click();
   await page.getByLabel("Название").fill(name);
   await page.getByRole("button", { name: "Создать" }).click();
   await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();

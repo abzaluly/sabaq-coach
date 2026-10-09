@@ -33,6 +33,7 @@ const AUTHENTICATED = [
   "public.remove_member",
   "public.resolve_audit",
   "public.revoke_invite",
+  "public.season_results",
   "public.set_member_role",
   "public.toggle_reaction",
   "public.update_group_settings",
@@ -40,7 +41,7 @@ const AUTHENTICATED = [
   "public.vote_habit",
 ];
 
-const SERVICE_ONLY = ["public.discard_proof", "public.register_proof", "public.run_tick", "public.stale_proofs"];
+const SERVICE_ONLY = ["public.claim_notifications", "public.complete_notification", "public.discard_proof", "public.register_proof", "public.run_tick", "public.stale_proofs"];
 
 async function executable(db: Parameters<Parameters<typeof tx>[0]>[0], role: string) {
   const { rows } = await db.query<{ fn: string }>(

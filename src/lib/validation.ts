@@ -14,3 +14,17 @@ export const onboardingSchema = z.object({
   nickname: nicknameSchema,
   characterSeed: z.string().min(1).max(64),
 });
+
+/**
+ * Нормализует телефон в E.164. Казахстанские/российские номера можно вводить как
+ * 8 700 …, 7 700 … или +7 700 …; остальные — с кодом страны через «+».
+ */
+export function normalizePhone(input: string): string | null {
+  const digits = input.replace(/[^\d+]/g, "");
+  let e164: string;
+  if (/^8\d{10}$/.test(digits)) e164 = `+7${digits.slice(1)}`;
+  else if (/^7\d{10}$/.test(digits)) e164 = `+${digits}`;
+  else if (/^\+\d{10,15}$/.test(digits)) e164 = digits;
+  else return null;
+  return e164;
+}

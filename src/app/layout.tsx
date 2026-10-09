@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getTranslations } from "next-intl/server";
 import { Nunito } from "next/font/google";
+import { SwRegister } from "@/components/sw-register";
 import { themeInitScript } from "@/components/theme-toggle";
 import "./globals.css";
 
@@ -13,6 +14,8 @@ export async function generateMetadata(): Promise<Metadata> {
     title: { default: t("name"), template: `%s · ${t("name")}` },
     description: t("tagline"),
     applicationName: t("name"),
+    icons: { icon: "/icons/icon-192.png", apple: "/icons/apple-touch-icon.png" },
+    appleWebApp: { capable: true, title: t("name"), statusBarStyle: "default" },
   };
 }
 
@@ -35,6 +38,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
       </head>
       <body className="min-h-dvh font-sans antialiased">
         <NextIntlClientProvider>{children}</NextIntlClientProvider>
+        <SwRegister />
       </body>
     </html>
   );

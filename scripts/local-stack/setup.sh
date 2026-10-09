@@ -70,6 +70,7 @@ done
 psql "$DBURL" -v ON_ERROR_STOP=1 -q -f "$ROOT/supabase/seed.sql" > /dev/null
 
 eval "$(node "$ROOT/scripts/local-stack/jwt.mjs" "$JWT_SECRET")"
+SMS_HOOK_SECRET="v1,whsec_$(node -e 'process.stdout.write(Buffer.from("local-sms-hook-secret-0123456789").toString("base64"))')"
 cat > "$STACK/env" <<ENV
 JWT_SECRET=$JWT_SECRET
 DBURL=$DBURL
@@ -77,16 +78,23 @@ AUTHURL=$AUTHURL
 RESTURL=$RESTURL
 ANON_KEY=$ANON_KEY
 SERVICE_KEY=$SERVICE_KEY
+SMS_HOOK_SECRET='$SMS_HOOK_SECRET'
 ENV
 
-if [[ ! -f "$ROOT/.env.local" ]]; then
-  cat > "$ROOT/.env.local" <<ENV
-NEXT_PUBLIC_SUPABASE_URL=http://127.0.0.1:54321
-NEXT_PUBLIC_SUPABASE_ANON_KEY=$ANON_KEY
-SUPABASE_SERVICE_ROLE_KEY=$SERVICE_KEY
-NEXT_PUBLIC_SITE_URL=http://localhost:3000
-CRON_SECRET=local-cron-secret
-ENV
-  echo "→ wrote .env.local"
-fi
+# .env.local: дописываем только отсутствующие переменные (свои значения не трогаем).
+VAPID="$(node -e 'const w=require("web-push");const k=w.generateVAPIDKeys();console.log(k.publicKey+" "+k.privateKey)')"
+add_env() { grep -q "^$1=" "$ROOT/.env.local" 2>/dev/null || echo "$1=$2" >> "$ROOT/.env.local"; }
+add_env NEXT_PUBLIC_SUPABASE_URL http://127.0.0.1:54321
+add_env NEXT_PUBLIC_SUPABASE_ANON_KEY "$ANON_KEY"
+add_env SUPABASE_SERVICE_ROLE_KEY "$SERVICE_KEY"
+add_env NEXT_PUBLIC_SITE_URL http://localhost:3000
+add_env CRON_SECRET local-cron-secret
+add_env NEXT_PUBLIC_SMS_ENABLED true
+add_env SMS_PROVIDER dev
+add_env SMS_DEV_DIR "$STACK/sms"
+add_env SEND_SMS_HOOK_SECRET "$SMS_HOOK_SECRET"
+add_env EMAIL_DEV_DIR "$STACK/email"
+add_env NEXT_PUBLIC_VAPID_PUBLIC_KEY "${VAPID% *}"
+add_env VAPID_PRIVATE_KEY "${VAPID#* }"
+add_env VAPID_SUBJECT mailto:dev@orle.local
 echo "✓ done. Start with: scripts/local-stack/start.sh"

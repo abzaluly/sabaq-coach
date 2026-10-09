@@ -1,5 +1,7 @@
 import { timingSafeEqual } from "node:crypto";
 import { NextResponse, type NextRequest } from "next/server";
+import { publicEnv } from "@/lib/env";
+import { dispatchNotifications } from "@/lib/notify";
 import { createAdminClient, PROOFS_BUCKET } from "@/lib/supabase/admin";
 
 export const runtime = "nodejs";
@@ -14,7 +16,7 @@ function authorized(request: NextRequest) {
 }
 
 /**
- * Тик планировщика: решения по отметкам → закрытие периодов → сезоны.
+ * Тик планировщика: решения по отметкам → закрытие периодов → сезоны → рассылка уведомлений.
  * Основной путь — pg_cron внутри БД (см. миграцию 0600); этот маршрут — запасной
  * (Vercel Cron / любой внешний cron) и уборка неиспользованных фото в хранилище.
  * Идемпотентен: можно вызывать сколько угодно часто.
@@ -30,5 +32,7 @@ export async function GET(request: NextRequest) {
   const paths = ((stale ?? []) as { storage_path: string }[]).map((p) => p.storage_path);
   if (paths.length > 0) await admin.storage.from(PROOFS_BUCKET).remove(paths);
 
-  return NextResponse.json({ ok: true, ...(result as object), stale_proofs_removed: paths.length });
+  const notifications = await dispatchNotifications(publicEnv.NEXT_PUBLIC_SITE_URL);
+
+  return NextResponse.json({ ok: true, ...(result as object), stale_proofs_removed: paths.length, notifications });
 }
