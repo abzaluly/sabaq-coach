@@ -1,5 +1,5 @@
 import { useId } from "react";
-import { traitsFromSeed, type Mood, type Stage } from "@/lib/character";
+import { traitsFromSeed, type Cosmetics, type Mood, type Stage } from "@/lib/character";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -9,13 +9,14 @@ type Props = {
   size?: number;
   className?: string;
   title?: string;
+  cosmetics?: Cosmetics;
 };
 
 /**
  * SVG-орлёнок. Стадии заметно отличаются силуэтом: яйцо, пушистый птенец,
  * подросток с крыльями, взрослый орёл с хохолком, легенда с короной-сиянием.
  */
-export function Character({ seed, stage = 1, mood = "normal", size = 96, className, title }: Props) {
+export function Character({ seed, stage = 1, mood = "normal", size = 96, className, title, cosmetics }: Props) {
   const t = traitsFromSeed(seed);
   const id = useId().replace(/:/g, "");
   const body = `oklch(0.72 0.14 ${t.hue})`;
@@ -35,12 +36,26 @@ export function Character({ seed, stage = 1, mood = "normal", size = 96, classNa
     >
       {title ? <title>{title}</title> : null}
       <defs>
+        <linearGradient id={`aurora-${id}`} x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor="oklch(0.75 0.13 300)" />
+          <stop offset="100%" stopColor="oklch(0.8 0.12 180)" />
+        </linearGradient>
+        <clipPath id={`clip-${id}`}>
+          <circle cx="60" cy="60" r="58" />
+        </clipPath>
         <radialGradient id={`glow-${id}`}>
           <stop offset="0%" stopColor="oklch(0.9 0.15 85)" stopOpacity="0.9" />
           <stop offset="100%" stopColor="oklch(0.9 0.15 85)" stopOpacity="0" />
         </radialGradient>
       </defs>
 
+      {cosmetics?.background === "bg_meadow" && (
+        <g aria-hidden clipPath={`url(#clip-${id})`}>
+          <circle cx="60" cy="60" r="58" fill="oklch(0.88 0.08 140)" />
+          <path d="M2 86 Q30 74 60 84 T118 80 V120 H2Z" fill="oklch(0.72 0.13 145)" />
+        </g>
+      )}
+      {cosmetics?.background === "bg_aurora" && <circle cx="60" cy="60" r="58" fill={`url(#aurora-${id})`} opacity="0.8" aria-hidden />}
       {stage === 4 && <circle cx="60" cy="62" r="56" fill={`url(#glow-${id})`} />}
 
       {mood === "fire" && (
@@ -65,6 +80,13 @@ export function Character({ seed, stage = 1, mood = "normal", size = 96, classNa
         </g>
       ) : (
         <g>
+          {/* легенда: хвост и золотые кончики крыльев */}
+          {stage === 4 && (
+            <g aria-hidden>
+              <path d="M48 100 L40 116 L54 106 L60 118 L66 106 L80 116 L72 100Z" fill="oklch(0.8 0.15 85)" />
+              <path d="M10 86 Q4 70 12 62 L16 74Z M110 86 Q116 70 108 62 L104 74Z" fill="oklch(0.83 0.16 85)" />
+            </g>
+          )}
           {/* крылья */}
           {stage >= 2 && (
             <g fill={bodyDark}>
@@ -110,6 +132,34 @@ export function Character({ seed, stage = 1, mood = "normal", size = 96, classNa
           )}
           {/* клюв */}
           <path d={stage >= 3 ? "M54 66 Q60 64 66 66 Q62 78 58 76Z" : "M55 67 L65 67 L60 74Z"} fill={beak} />
+        </g>
+      )}
+
+      {stage === 4 && (
+        <g aria-hidden fill="oklch(0.85 0.16 85)">
+          <path d="M20 30 l2 6 l6 2 l-6 2 l-2 6 l-2 -6 l-6 -2 l6 -2z" />
+          <path d="M98 22 l1.5 4.5 l4.5 1.5 l-4.5 1.5 l-1.5 4.5 l-1.5 -4.5 l-4.5 -1.5 l4.5 -1.5z" />
+        </g>
+      )}
+      {stage > 0 && cosmetics?.accessory === "acc_scarf" && (
+        <path d="M40 90 Q60 100 80 90 L80 97 Q60 107 40 97Z M70 96 l4 16 l6 -2 l-3 -14Z" fill="oklch(0.6 0.2 25)" aria-hidden />
+      )}
+      {stage > 0 && cosmetics?.accessory === "acc_crown" && (
+        <path d="M46 40 L48 26 L55 33 L60 22 L65 33 L72 26 L74 40Z" fill="oklch(0.83 0.16 85)" stroke="oklch(0.6 0.14 70)" strokeWidth="1.5" aria-hidden />
+      )}
+      {stage > 0 && cosmetics?.accessory === "acc_gavel" && (
+        <g aria-hidden transform="rotate(-30 100 80)">
+          <rect x="92" y="70" width="18" height="9" rx="2" fill="oklch(0.5 0.08 55)" />
+          <rect x="99" y="78" width="4" height="20" rx="1.5" fill="oklch(0.62 0.08 60)" />
+        </g>
+      )}
+      {cosmetics?.frame === "frame_ember" && (
+        <circle cx="60" cy="60" r="57" fill="none" stroke="oklch(0.7 0.19 45)" strokeWidth="4" strokeDasharray="10 4" aria-hidden />
+      )}
+      {cosmetics?.frame === "frame_gold" && (
+        <g aria-hidden fill="none" stroke="oklch(0.8 0.15 85)">
+          <circle cx="60" cy="60" r="57" strokeWidth="4" />
+          <circle cx="60" cy="60" r="51" strokeWidth="1.5" />
         </g>
       )}
 

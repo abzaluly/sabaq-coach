@@ -18,6 +18,18 @@ export function stageForPoints(points: number): Stage {
   return stage;
 }
 
+/** Уровень растёт плавнее стадий: 1 + ⌊√(очки / 5)⌋. */
+export function levelForPoints(points: number): number {
+  return 1 + Math.floor(Math.sqrt(Math.max(0, points) / 5));
+}
+
+/** Очки, нужные для уровня n. */
+export function pointsForLevel(level: number): number {
+  return 5 * (level - 1) ** 2;
+}
+
+export type Cosmetics = { frame?: string | null; background?: string | null; accessory?: string | null };
+
 export function moodFor({ streak, missedRecently, frozen }: { streak: number; missedRecently: boolean; frozen: boolean }): Mood {
   if (frozen) return "shield";
   if (missedRecently) return "tired";

@@ -51,6 +51,7 @@ export const RPC_ERROR_CODES = [
   "invalid_freeze",
   "freeze_too_late",
   "freeze_limit_reached",
+  "cosmetic_locked",
 ] as const;
 
 /** Ошибки, которые возникают в Route Handlers до обращения к БД. */

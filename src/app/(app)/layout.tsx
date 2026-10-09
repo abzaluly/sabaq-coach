@@ -3,17 +3,22 @@ import Link from "next/link";
 import { Character } from "@/components/character";
 import { ThemeToggle } from "@/components/theme-toggle";
 import { Button } from "@/components/ui/button";
+import { getEquipped } from "@/lib/arena";
+import { stageForPoints } from "@/lib/character";
 import { requireOnboardedProfile } from "@/lib/profile";
+import { getMySummary } from "@/lib/summary";
 
 export default async function AppLayout({ children }: { children: React.ReactNode }) {
   const profile = await requireOnboardedProfile();
   const t = await getTranslations();
+  const [summary, equipped] = await Promise.all([getMySummary(), getEquipped([profile.id])]);
+  const best = Math.max(0, ...summary.map((r) => r.total_points));
 
   return (
     <div className="mx-auto min-h-dvh max-w-md px-4 pb-24 pt-[max(0.75rem,env(safe-area-inset-top))]">
       <header className="flex items-center justify-between gap-2">
         <Link href="/" className="flex items-center gap-2 rounded-xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring">
-          <Character seed={profile.character_seed} stage={1} size={40} />
+          <Character seed={profile.character_seed} stage={stageForPoints(best)} cosmetics={equipped.get(profile.id)} size={40} />
           <span className="text-xl font-extrabold">{t("app.name")}</span>
         </Link>
         <div className="flex items-center gap-1">
