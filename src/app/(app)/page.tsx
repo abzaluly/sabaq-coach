@@ -2,6 +2,7 @@ import { ChevronRight, Plus, Ticket } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { TodayList, type TodayItem } from "@/components/today-list";
 import { Card } from "@/components/ui/card";
 import { requireOnboardedProfile } from "@/lib/profile";
 import { createClient } from "@/lib/supabase/server";
@@ -10,10 +11,11 @@ export default async function HomePage() {
   const profile = await requireOnboardedProfile();
   const t = await getTranslations("home");
   const supabase = await createClient();
-  const { data: groups } = await supabase
-    .from("group_members")
-    .select("role, groups(id, name)")
-    .eq("user_id", profile.id);
+  const [{ data: groups }, { data: todayRows }] = await Promise.all([
+    supabase.from("group_members").select("role, groups(id, name)").eq("user_id", profile.id),
+    supabase.rpc("my_today"),
+  ]);
+  const today = (todayRows ?? []) as TodayItem[];
 
   return (
     <main className="mt-6 space-y-6">
@@ -23,7 +25,7 @@ export default async function HomePage() {
         <h2 id="today-title" className="mb-2 text-lg font-bold">
           {t("today")}
         </h2>
-        <Card className="text-muted">{t("todayEmpty")}</Card>
+        {today.length > 0 ? <TodayList items={today} showGroup /> : <Card className="text-muted">{t("todayEmpty")}</Card>}
       </section>
 
       <section aria-labelledby="groups-title">

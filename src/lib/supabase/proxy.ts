@@ -2,7 +2,8 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { publicEnv } from "@/lib/env";
 
-const PUBLIC_PATHS = ["/login", "/auth"];
+// /api/* сами проверяют сессию или секрет и отвечают 401, а не редиректом.
+const PUBLIC_PATHS = ["/login", "/auth", "/api"];
 
 /** Обновляет сессию Supabase и не пускает гостей дальше /login. */
 export async function updateSession(request: NextRequest) {

@@ -103,7 +103,12 @@
     "change_already_proposed": "Изменение этой привычки уже на голосовании.",
     "habit_limit_reached": "Достигнут лимит активных привычек в группе.",
     "habit_not_editable": "Эту привычку уже нельзя изменить.",
-    "voting_closed": "Голосование по этой привычке завершено."
+    "voting_closed": "Голосование по этой привычке завершено.",
+    "invalid_comment": "Комментарий — от 1 до 500 символов.",
+    "invalid_reaction": "Такой реакции нет.",
+    "invalid_image": "Это не похоже на фото. Попробуйте ещё раз.",
+    "image_too_large": "Фото больше 10 МБ.",
+    "upload_failed": "Не удалось загрузить фото. Проверьте связь и повторите."
   },
   "roles": {
     "owner": "Владелец",
@@ -140,7 +145,8 @@
       "votes": "Голосования",
       "leaderboard": "Лидерборд",
       "settings": "Настройки",
-      "pending": "{count, plural, one {# решение ждёт} few {# решения ждут} other {# решений ждут}}"
+      "pending": "{count, plural, one {# решение ждёт} few {# решения ждут} other {# решений ждут}}",
+      "moderation": "Модерация"
     }
   },
   "arena": {
@@ -204,7 +210,8 @@
       "ended": "Завершена",
       "startsOn": "С {date}",
       "endsOn": "До {date}"
-    }
+    },
+    "todayTitle": "Отметить сейчас"
   },
   "votes": {
     "habitsTitle": "Новые привычки",
@@ -226,7 +233,9 @@
       "approve": "за",
       "reject": "против",
       "request_changes": "уточнить"
-    }
+    },
+    "disputedTitle": "Спорные отметки",
+    "noDisputed": "Спорных отметок нет."
   },
   "settings": {
     "invitesTitle": "Приглашения",
@@ -276,5 +285,76 @@
     "pendingNote": "Есть изменения, которые вступят в силу {date}.",
     "saved": "Сохранено",
     "save": "Сохранить настройки"
+  },
+  "checkin": {
+    "mark": "Отметить",
+    "photo": "Фото",
+    "uploading": "Загрузка…",
+    "sent": "На проверке",
+    "previewAlt": "Ваше фото",
+    "notePlaceholder": "Пара слов о выполнении",
+    "noteLabel": "Текст к фото",
+    "cancel": "Отмена",
+    "done": "Готово",
+    "frozen": "Заморозка",
+    "doneToday": "Сегодня отмечено",
+    "doneShort": "Готово",
+    "periodDone": "Период выполнен",
+    "yesterday": "Отметить за вчера",
+    "onReview": "На проверке у группы",
+    "progressWeek": "{done} из {target} за неделю",
+    "progressMonth": "{done} из {target} за месяц"
+  },
+  "feed": {
+    "empty": "Отметок пока нет. Будьте первым!",
+    "older": "Показать ещё",
+    "forYesterday": "за вчера",
+    "proofAlt": "Фото-подтверждение: {habit}",
+    "honor": "Без фото — отметка на честном слове (меньше очков).",
+    "flag": {
+      "duplicate_image": "Похожее фото уже загружалось в группе",
+      "old_photo": "Фото снято больше суток назад"
+    },
+    "approved": "Засчитано",
+    "rejected": "Отклонено",
+    "pendingHours": "Проверка · {hours} ч",
+    "confirm": "Подтвердить",
+    "confirmed": "Подтверждено",
+    "dispute": "Оспорить",
+    "disputed": "Оспорено",
+    "disputePlaceholder": "Что не так? Например: «это фото было на прошлой неделе»",
+    "disputeReason": "Причина спора",
+    "cancel": "Отмена",
+    "reactions": "Реакции",
+    "comments": "{count, plural, =0 {Комментировать} one {# комментарий} few {# комментария} other {# комментариев}}",
+    "commentPlaceholder": "Комментарий",
+    "commentLabel": "Ваш комментарий",
+    "send": "Отпр.",
+    "moderate": "Отклонить как фейк",
+    "moderateHint": "Очки за отметку будут отозваны, автор получит штраф. Действие видно всей группе.",
+    "moderateReason": "Причина",
+    "reject": "Отклонить"
+  },
+  "moderation": {
+    "title": "Модерация",
+    "hint": "Подозрительные действия: повторные и старые фото, слишком частые отметки, споры и решения модераторов.",
+    "empty": "Всё спокойно.",
+    "showAll": "Показать всё",
+    "onlyOpen": "Только открытые",
+    "resolve": "Разобрано",
+    "formerMember": "бывший участник",
+    "kind": {
+      "suspicious_proof": "Подозрительное фото",
+      "rate_limited_checkin": "Слишком частые отметки",
+      "checkin_disputed": "Отметку оспорили",
+      "checkin_moderated": "Отметка отклонена модератором",
+      "member_removed": "Участник исключён",
+      "role_changed": "Смена роли",
+      "group_settings_changed": "Изменены настройки"
+    },
+    "flag": {
+      "duplicate_image": "повтор изображения",
+      "old_photo": "старое фото"
+    }
   }
 }

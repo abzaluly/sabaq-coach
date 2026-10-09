@@ -1,7 +1,7 @@
 import { readFileSync, readdirSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { RPC_ERROR_CODES, rpcErrorCode } from "@/lib/rpc";
+import { APP_ERROR_CODES, RPC_ERROR_CODES, rpcErrorCode } from "@/lib/rpc";
 import ru from "../../messages/ru.json";
 
 const root = path.resolve(import.meta.dirname, "../..");
@@ -27,6 +27,6 @@ describe("коды ошибок синхронизированы", () => {
     expect([...raised].sort()).toEqual([...RPC_ERROR_CODES].sort());
   });
   it("у каждого кода есть перевод", () => {
-    for (const code of RPC_ERROR_CODES) expect(ru.errors, code).toHaveProperty(code);
+    for (const code of [...RPC_ERROR_CODES, ...APP_ERROR_CODES, "generic", "network"]) expect(ru.errors, code).toHaveProperty(code);
   });
 });

@@ -5,6 +5,8 @@ const port = Number(process.env.E2E_PORT ?? 3000);
 export default defineConfig({
   testDir: "e2e",
   fullyParallel: true,
+  // Сквозные сценарии с двумя пользователями и загрузкой фото длиннее дефолтных 30 с.
+  timeout: 120_000,
   retries: process.env.CI ? 1 : 0,
   use: {
     baseURL: `http://localhost:${port}`,

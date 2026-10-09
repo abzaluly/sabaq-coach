@@ -15,7 +15,12 @@ export function GroupTabs({ groupId, isAdmin, pendingVotes }: { groupId: string;
     { href: `${base}/habits`, label: t("habits") },
     { href: `${base}/votes`, label: t("votes"), badge: pendingVotes },
     { href: `${base}/leaderboard`, label: t("leaderboard") },
-    ...(isAdmin ? [{ href: `${base}/settings`, label: t("settings") }] : []),
+    ...(isAdmin
+      ? [
+          { href: `${base}/moderation`, label: t("moderation") },
+          { href: `${base}/settings`, label: t("settings") },
+        ]
+      : []),
   ];
 
   return (

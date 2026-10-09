@@ -46,9 +46,14 @@ export const RPC_ERROR_CODES = [
   "habit_limit_reached",
   "habit_not_editable",
   "voting_closed",
+  "invalid_comment",
+  "invalid_reaction",
 ] as const;
 
-export type RpcErrorCode = (typeof RPC_ERROR_CODES)[number] | "generic" | "network";
+/** Ошибки, которые возникают в Route Handlers до обращения к БД. */
+export const APP_ERROR_CODES = ["invalid_image", "image_too_large", "upload_failed"] as const;
+
+export type RpcErrorCode = (typeof RPC_ERROR_CODES)[number] | (typeof APP_ERROR_CODES)[number] | "generic" | "network";
 
 /** Переводит ошибку PostgREST в ключ `errors.*` для i18n. */
 export function rpcErrorCode(error: Pick<PostgrestError, "code" | "message"> | null | undefined): RpcErrorCode {

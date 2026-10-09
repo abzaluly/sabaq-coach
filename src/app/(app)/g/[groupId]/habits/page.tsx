@@ -2,6 +2,7 @@ import { Plus } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import Link from "next/link";
 import { HabitSummary } from "@/components/habit-summary";
+import { TodayList, type TodayItem } from "@/components/today-list";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { getGroupContext, todayIn } from "@/lib/group";
@@ -14,12 +15,11 @@ export default async function MyHabitsPage({ params }: { params: Promise<{ group
   const { group, me } = await getGroupContext(groupId);
   const t = await getTranslations("habits");
   const supabase = await createClient();
-  const { data } = await supabase
-    .from("habits")
-    .select("*")
-    .eq("group_id", groupId)
-    .eq("user_id", me.id)
-    .order("created_at", { ascending: false });
+  const [{ data }, { data: todayRows }] = await Promise.all([
+    supabase.from("habits").select("*").eq("group_id", groupId).eq("user_id", me.id).order("created_at", { ascending: false }),
+    supabase.rpc("my_today", { p_group_id: groupId }),
+  ]);
+  const todayItems = (todayRows ?? []) as TodayItem[];
   const habits = (data ?? []) as Habit[];
   const today = todayIn(group.timezone);
 
@@ -32,6 +32,12 @@ export default async function MyHabitsPage({ params }: { params: Promise<{ group
 
   return (
     <section className="space-y-4">
+      {todayItems.length > 0 && (
+        <div>
+          <h2 className="mb-2 text-lg font-bold">{t("todayTitle")}</h2>
+          <TodayList items={todayItems} showGroup={false} />
+        </div>
+      )}
       <div className="flex items-center justify-between">
         <h2 className="text-lg font-bold">
           {t("mine")}{" "}

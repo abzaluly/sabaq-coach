@@ -47,3 +47,8 @@ export const getGroupContext = cache(async (groupId: string): Promise<GroupConte
 export function todayIn(timezone: string, now = new Date()): string {
   return new Intl.DateTimeFormat("en-CA", { timeZone: timezone, year: "numeric", month: "2-digit", day: "2-digit" }).format(now);
 }
+
+/** Момент рендера (ISO) — передаётся клиенту, чтобы относительное время не расходилось при гидратации. */
+export function serverNow(): string {
+  return new Date().toISOString();
+}

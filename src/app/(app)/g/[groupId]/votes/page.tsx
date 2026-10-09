@@ -1,8 +1,10 @@
 import { getTranslations } from "next-intl/server";
 import { Character } from "@/components/character";
+import { FeedCard, type MemberInfo } from "@/components/feed-card";
+import { getFeed } from "@/lib/feed";
 import { HabitSummary } from "@/components/habit-summary";
 import { Card } from "@/components/ui/card";
-import { getGroupContext, todayIn } from "@/lib/group";
+import { getGroupContext, serverNow, todayIn } from "@/lib/group";
 import { createClient } from "@/lib/supabase/server";
 import type { Habit, HabitVote } from "@/lib/types";
 import { HabitVoteForm } from "./habit-vote-form";
@@ -11,7 +13,7 @@ type ProposedHabit = Habit & { habit_votes: HabitVote[] };
 
 export default async function VotesPage({ params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = await params;
-  const { group, me, members } = await getGroupContext(groupId);
+  const { group, me, members, isAdmin } = await getGroupContext(groupId);
   const t = await getTranslations("votes");
   const supabase = await createClient();
   const { data } = await supabase
@@ -21,6 +23,9 @@ export default async function VotesPage({ params }: { params: Promise<{ groupId:
     .eq("status", "proposed")
     .order("created_at");
   const proposed = (data ?? []) as ProposedHabit[];
+  const disputed = await getFeed(groupId, { status: "pending", disputedOnly: true, limit: 50 });
+  const now = serverNow();
+  const memberMap: Record<string, MemberInfo> = Object.fromEntries(members.map((m) => [m.user_id, m.profile]));
   const today = todayIn(group.timezone);
   const byId = new Map(members.map((m) => [m.user_id, m.profile]));
   const others = members.length - 1;
@@ -79,7 +84,20 @@ export default async function VotesPage({ params }: { params: Promise<{ groupId:
         </section>
       )}
 
-      {/* Спорные отметки появятся здесь на этапе 3 */}
+      <section>
+        <h2 className="mb-2 text-lg font-bold">{t("disputedTitle")}</h2>
+        {disputed.length === 0 ? (
+          <Card className="text-muted">{t("noDisputed")}</Card>
+        ) : (
+          <ul className="space-y-4">
+            {disputed.map((item) => (
+              <li key={item.id}>
+                <FeedCard item={item} groupId={groupId} meId={me.id} isAdmin={isAdmin} members={memberMap} now={now} timezone={group.timezone} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
     </div>
   );
 }
