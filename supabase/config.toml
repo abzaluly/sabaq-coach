@@ -1,0 +1,68 @@
+# Локальная конфигурация Supabase CLI (`pnpm db:start`).
+# Значения, которых здесь нет, берутся по умолчанию из CLI.
+project_id = "orle"
+
+[api]
+enabled = true
+port = 54321
+schemas = ["public"]
+extra_search_path = ["public", "extensions"]
+max_rows = 1000
+
+[db]
+port = 54322
+major_version = 17
+
+[db.seed]
+enabled = true
+sql_paths = ["./seed.sql"]
+
+[studio]
+enabled = true
+port = 54323
+
+# Письма в локальной среде не уходят наружу — смотрите их в Inbucket/Mailpit.
+[inbucket]
+enabled = true
+port = 54324
+
+[storage]
+enabled = true
+file_size_limit = "10MiB"
+
+[auth]
+enabled = true
+site_url = "http://localhost:3000"
+additional_redirect_urls = ["http://localhost:3000/auth/confirm"]
+jwt_expiry = 3600
+enable_refresh_token_rotation = true
+enable_signup = true
+enable_anonymous_sign_ins = false
+# Один человек — один аккаунт: email и телефон можно привязать к одному профилю.
+enable_manual_linking = false
+
+[auth.rate_limit]
+email_sent = 30
+sms_sent = 30
+token_verifications = 30
+
+[auth.email]
+enable_signup = true
+double_confirm_changes = true
+enable_confirmations = false
+otp_length = 6
+otp_expiry = 600
+max_frequency = "30s"
+
+[auth.email.template.magic_link]
+subject = "Ваш код для входа в Orle"
+content_path = "./supabase/templates/magic_link.html"
+
+[auth.email.template.confirmation]
+subject = "Ваш код для входа в Orle"
+content_path = "./supabase/templates/magic_link.html"
+
+# SMS-вход включается на этапе 6 (см. README → «SMS-провайдер»).
+[auth.sms]
+enable_signup = false
+enable_confirmations = false

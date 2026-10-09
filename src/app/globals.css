@@ -1,0 +1,72 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* Тёплая игровая палитра. Токены используются через утилиты Tailwind (bg-bg, text-fg…). */
+:root {
+  --bg: oklch(0.985 0.012 75);
+  --surface: oklch(1 0 0);
+  --surface-2: oklch(0.96 0.02 75);
+  --fg: oklch(0.25 0.03 50);
+  --muted: oklch(0.5 0.03 55);
+  --border: oklch(0.9 0.02 70);
+  /* Белый текст на primary — контраст ≥ 4.5:1 (WCAG AA). */
+  --primary: oklch(0.57 0.17 42);
+  --primary-fg: oklch(0.99 0.01 75);
+  --accent: oklch(0.72 0.14 160);
+  --danger: oklch(0.55 0.21 27);
+  --ring: oklch(0.65 0.18 45 / 0.5);
+}
+
+.dark {
+  --bg: oklch(0.2 0.02 50);
+  --surface: oklch(0.25 0.025 50);
+  --surface-2: oklch(0.3 0.03 50);
+  --fg: oklch(0.95 0.015 75);
+  --muted: oklch(0.72 0.03 65);
+  --border: oklch(0.36 0.03 50);
+  --primary: oklch(0.74 0.17 50);
+  --primary-fg: oklch(0.2 0.03 45);
+  --accent: oklch(0.76 0.13 160);
+  --danger: oklch(0.7 0.19 27);
+  --ring: oklch(0.74 0.17 50 / 0.5);
+}
+
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-fg: var(--fg);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-fg: var(--primary-fg);
+  --color-accent: var(--accent);
+  --color-danger: var(--danger);
+  --color-ring: var(--ring);
+  --font-sans: var(--font-nunito), ui-sans-serif, system-ui, sans-serif;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.25rem;
+}
+
+html {
+  color-scheme: light;
+}
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  -webkit-tap-highlight-color: transparent;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

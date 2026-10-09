@@ -8,8 +8,22 @@ backend/uploads/
 backend/.env
 
 # Node
-frontend/node_modules/
+node_modules/
 frontend/dist/
+.next/
+next-env.d.ts
+*.tsbuildinfo
+coverage/
+playwright-report/
+test-results/
+
+# Env (шаблон — .env.example)
+.env
+.env*.local
+
+# Supabase CLI
+supabase/.branches/
+supabase/.temp/
 
 # iOS
 ios/StudyAssistant.xcodeproj/xcuserdata/

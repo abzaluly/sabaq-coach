@@ -1,0 +1,17 @@
+<!doctype html>
+<html lang="ru">
+  <body style="font-family: system-ui, sans-serif; background: #fff8f0; padding: 24px; color: #2b2118">
+    <h2 style="margin: 0 0 16px">Вход в Orle</h2>
+    <p>Ваш одноразовый код:</p>
+    <p style="font-size: 32px; font-weight: 700; letter-spacing: 6px; margin: 8px 0 24px">{{ .Token }}</p>
+    <p>Или просто нажмите на кнопку:</p>
+    <p>
+      <a
+        href="{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email"
+        style="display: inline-block; background: #f97316; color: #fff; padding: 12px 20px; border-radius: 12px; text-decoration: none"
+        >Войти</a
+      >
+    </p>
+    <p style="color: #8a7a6a; font-size: 13px">Код действует 10 минут. Если вы не запрашивали вход — просто проигнорируйте письмо.</p>
+  </body>
+</html>

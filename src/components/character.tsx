@@ -1,0 +1,130 @@
+import { useId } from "react";
+import { traitsFromSeed, type Mood, type Stage } from "@/lib/character";
+import { cn } from "@/lib/utils";
+
+type Props = {
+  seed: string;
+  stage?: Stage;
+  mood?: Mood;
+  size?: number;
+  className?: string;
+  title?: string;
+};
+
+/**
+ * SVG-орлёнок. Стадии заметно отличаются силуэтом: яйцо, пушистый птенец,
+ * подросток с крыльями, взрослый орёл с хохолком, легенда с короной-сиянием.
+ */
+export function Character({ seed, stage = 1, mood = "normal", size = 96, className, title }: Props) {
+  const t = traitsFromSeed(seed);
+  const id = useId().replace(/:/g, "");
+  const body = `oklch(0.72 0.14 ${t.hue})`;
+  const bodyDark = `oklch(0.55 0.15 ${t.hue})`;
+  const belly = `oklch(0.92 0.06 ${t.bellyHue})`;
+  const beak = "oklch(0.8 0.16 80)";
+  const tired = mood === "tired";
+
+  return (
+    <svg
+      viewBox="0 0 120 120"
+      width={size}
+      height={size}
+      role="img"
+      aria-label={title}
+      className={cn("shrink-0", tired && "saturate-50", className)}
+    >
+      {title ? <title>{title}</title> : null}
+      <defs>
+        <radialGradient id={`glow-${id}`}>
+          <stop offset="0%" stopColor="oklch(0.9 0.15 85)" stopOpacity="0.9" />
+          <stop offset="100%" stopColor="oklch(0.9 0.15 85)" stopOpacity="0" />
+        </radialGradient>
+      </defs>
+
+      {stage === 4 && <circle cx="60" cy="62" r="56" fill={`url(#glow-${id})`} />}
+
+      {mood === "fire" && (
+        <g aria-hidden>
+          <path d="M60 4 C70 18 78 22 74 34 C70 28 66 30 60 22 C54 30 50 28 46 34 C42 22 50 18 60 4Z" fill="oklch(0.7 0.2 40)" />
+          <path d="M60 14 C65 22 68 26 66 32 C63 28 60 28 60 24 C60 28 57 28 54 32 C52 26 55 22 60 14Z" fill="oklch(0.85 0.17 80)" />
+        </g>
+      )}
+
+      {stage === 0 ? (
+        <g>
+          <ellipse cx="60" cy="70" rx="30" ry="38" fill={belly} stroke={bodyDark} strokeWidth="3" />
+          {t.pattern === 0 && <path d="M34 68 L44 60 L52 70 L60 58 L68 70 L76 60 L86 68" fill="none" stroke={bodyDark} strokeWidth="3" />}
+          {t.pattern === 1 && (
+            <g fill={body}>
+              <circle cx="48" cy="56" r="5" />
+              <circle cx="70" cy="72" r="6" />
+              <circle cx="52" cy="88" r="4" />
+            </g>
+          )}
+          {t.pattern === 2 && <path d="M30 80 Q60 66 90 80" fill="none" stroke={body} strokeWidth="6" />}
+        </g>
+      ) : (
+        <g>
+          {/* крылья */}
+          {stage >= 2 && (
+            <g fill={bodyDark}>
+              <path d={stage >= 3 ? "M26 66 Q2 50 10 86 Q22 84 32 82Z" : "M30 70 Q16 64 20 86 Q28 84 34 82Z"} />
+              <path d={stage >= 3 ? "M94 66 Q118 50 110 86 Q98 84 88 82Z" : "M90 70 Q104 64 100 86 Q92 84 86 82Z"} />
+            </g>
+          )}
+          {/* тело */}
+          <ellipse cx="60" cy={stage === 1 ? 74 : 70} rx={stage === 1 ? 30 : 32} ry={stage === 1 ? 30 : 36} fill={body} />
+          <ellipse cx="60" cy={stage === 1 ? 82 : 80} rx={stage === 1 ? 18 : 20} ry={stage === 1 ? 18 : 22} fill={belly} />
+          {t.pattern === 1 && stage >= 2 && (
+            <path d="M50 74 l4 4 l4 -4 M58 82 l4 4 l4 -4" stroke={bodyDark} strokeWidth="2" fill="none" />
+          )}
+          {/* хохолок */}
+          {stage >= 3 && t.crest === 0 && <path d="M52 36 Q56 20 60 34 Q64 20 68 36Z" fill={bodyDark} />}
+          {stage >= 3 && t.crest === 1 && <path d="M56 36 Q50 16 66 22 Q60 28 64 36Z" fill={bodyDark} />}
+          {stage >= 3 && t.crest === 2 && <path d="M50 38 L54 24 L60 34 L66 24 L70 38Z" fill={bodyDark} />}
+          {stage === 1 && <path d="M58 44 Q60 36 62 44" stroke={bodyDark} strokeWidth="3" fill="none" />}
+          {/* лапки */}
+          <g stroke={beak} strokeWidth="3" strokeLinecap="round">
+            <path d="M50 104 v6 M46 110 h8" />
+            <path d="M70 104 v6 M66 110 h8" />
+          </g>
+          {/* глаза */}
+          {tired ? (
+            <g stroke="oklch(0.25 0.03 50)" strokeWidth="3" strokeLinecap="round">
+              <path d="M44 60 h10" />
+              <path d="M66 60 h10" />
+            </g>
+          ) : (
+            <g>
+              <circle cx="49" cy="60" r={t.eye === 0 ? 6 : 5} fill="white" />
+              <circle cx="71" cy="60" r={t.eye === 0 ? 6 : 5} fill="white" />
+              <circle cx="50" cy="61" r="3" fill="oklch(0.2 0.02 50)" />
+              <circle cx="72" cy="61" r="3" fill="oklch(0.2 0.02 50)" />
+              {stage >= 3 && (
+                <g stroke="oklch(0.2 0.02 50)" strokeWidth="2.5" strokeLinecap="round">
+                  <path d="M42 52 l12 3" />
+                  <path d="M78 52 l-12 3" />
+                </g>
+              )}
+            </g>
+          )}
+          {/* клюв */}
+          <path d={stage >= 3 ? "M54 66 Q60 64 66 66 Q62 78 58 76Z" : "M55 67 L65 67 L60 74Z"} fill={beak} />
+        </g>
+      )}
+
+      {tired && (
+        <text x="88" y="34" fontSize="14" fontWeight="700" fill="oklch(0.6 0.03 60)" aria-hidden>
+          z
+        </text>
+      )}
+
+      {mood === "shield" && (
+        <g aria-hidden>
+          <circle cx="60" cy="68" r="52" fill="none" stroke="oklch(0.75 0.12 230)" strokeWidth="3" strokeDasharray="6 5" />
+          <path d="M96 84 l10 -4 l10 4 v8 q0 8 -10 12 q-10 -4 -10 -12z" fill="oklch(0.75 0.12 230)" />
+        </g>
+      )}
+    </svg>
+  );
+}
