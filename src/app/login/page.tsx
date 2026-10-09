@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Character } from "@/components/character";
 import { ThemeToggle } from "@/components/theme-toggle";
+import { safeNext } from "@/lib/safe-next";
 import { LoginForm } from "./login-form";
 
 export async function generateMetadata() {
@@ -8,8 +9,8 @@ export async function generateMetadata() {
   return { title: t("title") };
 }
 
-export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
-  const { error } = await searchParams;
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string; next?: string }> }) {
+  const { error, next } = await searchParams;
   const t = await getTranslations();
 
   return (
@@ -23,7 +24,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
         <p className="mt-2 text-muted">{t("app.tagline")}</p>
       </div>
       <div className="mt-10">
-        <LoginForm linkError={error === "link" ? t("login.linkFailed") : undefined} />
+        <LoginForm next={safeNext(next)} linkError={error === "link" ? t("login.linkFailed") : undefined} />
       </div>
     </main>
   );

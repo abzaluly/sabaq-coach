@@ -37,3 +37,6 @@ ios/DerivedData/
 .claude/
 .agents/
 skills-lock.json
+
+# Локальный стек без Docker
+.local-stack/

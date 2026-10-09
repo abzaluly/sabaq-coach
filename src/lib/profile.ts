@@ -31,7 +31,8 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
 /** Для страниц приложения: гость → /login, без онбординга → /onboarding. */
 export async function requireOnboardedProfile() {
   const profile = await getCurrentProfile();
-  if (!profile) redirect("/login");
-  if (!profile.onboarded_at) redirect("/onboarding");
+  // Гостей отсекает proxy.ts; если сессия есть, а профиля нет — онбординг покажет ошибку
+  // (редирект на /login здесь дал бы петлю: proxy вернёт авторизованного на /).
+  if (!profile?.onboarded_at) redirect("/onboarding");
   return profile as Profile & { display_name: string; nickname: string; character_seed: string };
 }

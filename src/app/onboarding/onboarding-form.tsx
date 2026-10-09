@@ -16,7 +16,7 @@ import { nicknameSchema, onboardingSchema } from "@/lib/validation";
 
 const SEED_COUNT = 6;
 
-export function OnboardingForm({ initialSeeds }: { initialSeeds: string[] }) {
+export function OnboardingForm({ initialSeeds, next = "/" }: { initialSeeds: string[]; next?: string }) {
   const t = useTranslations();
   const router = useRouter();
   const [displayName, setDisplayName] = useState("");
@@ -41,9 +41,9 @@ export function OnboardingForm({ initialSeeds }: { initialSeeds: string[] }) {
   }, [nickname, nicknameValid]);
 
   function shuffle() {
-    const next = randomSeeds(SEED_COUNT);
-    setSeeds(next);
-    setSeed(next[0]!);
+    const fresh = randomSeeds(SEED_COUNT);
+    setSeeds(fresh);
+    setSeed(fresh[0]!);
   }
 
   async function submit(e: FormEvent) {
@@ -66,7 +66,7 @@ export function OnboardingForm({ initialSeeds }: { initialSeeds: string[] }) {
       setPending(false);
       return setError(t(`errors.${rpcErrorCode(error)}`));
     }
-    router.replace("/");
+    router.replace(next);
     router.refresh();
   }
 

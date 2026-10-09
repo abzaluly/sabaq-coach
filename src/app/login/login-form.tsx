@@ -12,7 +12,7 @@ import { emailSchema, otpSchema } from "@/lib/validation";
 
 const RESEND_SECONDS = 30;
 
-export function LoginForm({ linkError }: { linkError?: string }) {
+export function LoginForm({ linkError, next = "/" }: { linkError?: string; next?: string }) {
   const t = useTranslations();
   const router = useRouter();
   const [step, setStep] = useState<"email" | "code">("email");
@@ -58,7 +58,7 @@ export function LoginForm({ linkError }: { linkError?: string }) {
       setPending(false);
       return setError(t("login.linkFailed"));
     }
-    router.replace("/");
+    router.replace(next);
     router.refresh();
   }
 

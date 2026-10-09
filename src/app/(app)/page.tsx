@@ -1,5 +1,6 @@
-import { Plus, Ticket } from "lucide-react";
+import { ChevronRight, Plus, Ticket } from "lucide-react";
 import { getTranslations } from "next-intl/server";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { requireOnboardedProfile } from "@/lib/profile";
@@ -35,7 +36,15 @@ export default async function HomePage() {
               const g = m.groups as unknown as { id: string; name: string } | null;
               return g ? (
                 <li key={g.id}>
-                  <Card className="font-semibold">{g.name}</Card>
+                  <Link
+                    href={`/g/${g.id}`}
+                    className="block rounded-2xl focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-ring"
+                  >
+                    <Card className="flex min-h-14 items-center justify-between font-semibold">
+                      {g.name}
+                      <ChevronRight className="size-5 text-muted" aria-hidden />
+                    </Card>
+                  </Link>
                 </li>
               ) : null;
             })}
@@ -44,14 +53,17 @@ export default async function HomePage() {
           <Card className="text-muted">{t("noGroups")}</Card>
         )}
         <div className="mt-4 grid grid-cols-2 gap-3">
-          {/* Создание и вступление — этап 2 */}
-          <Button size="lg" disabled title={t("soon")}>
-            <Plus />
-            {t("createGroup")}
+          <Button asChild size="lg">
+            <Link href="/groups/new">
+              <Plus />
+              {t("createGroup")}
+            </Link>
           </Button>
-          <Button size="lg" variant="secondary" disabled title={t("soon")}>
-            <Ticket />
-            {t("joinGroup")}
+          <Button asChild size="lg" variant="secondary">
+            <Link href="/join">
+              <Ticket />
+              {t("joinGroup")}
+            </Link>
           </Button>
         </div>
       </section>
