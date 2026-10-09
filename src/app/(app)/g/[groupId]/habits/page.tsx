@@ -5,20 +5,25 @@ import { HabitSummary } from "@/components/habit-summary";
 import { TodayList, type TodayItem } from "@/components/today-list";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { getGroupContext, todayIn } from "@/lib/group";
+import { addDays, getGroupContext, todayIn } from "@/lib/group";
 import { createClient } from "@/lib/supabase/server";
 import type { Habit } from "@/lib/types";
+import { FreezePanel, type FreezeRow } from "./freeze-panel";
 import { HabitActions } from "./habit-actions";
 
 export default async function MyHabitsPage({ params }: { params: Promise<{ groupId: string }> }) {
   const { groupId } = await params;
-  const { group, me } = await getGroupContext(groupId);
+  const { group, me, season } = await getGroupContext(groupId);
   const t = await getTranslations("habits");
   const supabase = await createClient();
-  const [{ data }, { data: todayRows }] = await Promise.all([
+  const [{ data }, { data: todayRows }, { data: freezeRows }] = await Promise.all([
     supabase.from("habits").select("*").eq("group_id", groupId).eq("user_id", me.id).order("created_at", { ascending: false }),
     supabase.rpc("my_today", { p_group_id: groupId }),
+    season
+      ? supabase.from("freezes").select("id, starts_on, ends_on, reason").eq("group_id", groupId).eq("user_id", me.id).eq("season_id", season.id).order("starts_on")
+      : Promise.resolve({ data: [] }),
   ]);
+  const freezes = (freezeRows ?? []) as FreezeRow[];
   const todayItems = (todayRows ?? []) as TodayItem[];
   const habits = (data ?? []) as Habit[];
   const today = todayIn(group.timezone);
@@ -70,6 +75,14 @@ export default async function MyHabitsPage({ params }: { params: Promise<{ group
           ))}
         </ul>
       )}
+
+      <FreezePanel
+        groupId={groupId}
+        freezes={freezes}
+        used={freezes.length}
+        limit={group.scoring_config.freezesPerSeason}
+        tomorrow={addDays(today, 1)}
+      />
 
       {past.length > 0 && (
         <details className="rounded-2xl">

@@ -14,8 +14,12 @@ revoke all on schema app_private from public;
 -- Новые таблицы в public не должны автоматически получать права для клиентов.
 alter default privileges in schema public revoke all on tables from anon, authenticated;
 alter default privileges in schema public revoke all on sequences from anon, authenticated;
-alter default privileges in schema public revoke execute on functions from anon, authenticated, public;
-alter default privileges in schema app_private revoke execute on functions from anon, authenticated, public;
+-- EXECUTE для PUBLIC выдаётся глобальным умолчанием, и per-schema ALTER DEFAULT PRIVILEGES
+-- его не отзывает — нужен глобальный revoke. Каждая функция получает права явным GRANT;
+-- тест tests/db/grants.test.ts сверяет итог с белым списком.
+alter default privileges revoke execute on functions from public;
+alter default privileges in schema public revoke execute on functions from anon, authenticated;
+alter default privileges in schema app_private revoke execute on functions from anon, authenticated;
 
 -- ---------------------------------------------------------------- enums
 create type public.group_role as enum ('owner', 'admin', 'member');

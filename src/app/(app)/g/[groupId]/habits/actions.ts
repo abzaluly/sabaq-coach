@@ -48,3 +48,20 @@ export async function voteHabitAction(_prev: FormState, form: FormData): Promise
   revalidatePath(`/g/${str(form, "group_id")}`, "layout");
   return toFormState(result);
 }
+
+export async function declareFreezeAction(_prev: FormState, form: FormData): Promise<FormState> {
+  const result = await callRpc("declare_freeze", {
+    p_group_id: str(form, "group_id"),
+    p_starts_on: str(form, "starts_on"),
+    p_ends_on: str(form, "ends_on") || str(form, "starts_on"),
+    p_reason: str(form, "reason"),
+  });
+  revalidatePath(`/g/${str(form, "group_id")}`, "layout");
+  return toFormState(result);
+}
+
+export async function cancelFreezeAction(_prev: FormState, form: FormData): Promise<FormState> {
+  const result = await callRpc("cancel_freeze", { p_freeze_id: str(form, "freeze_id") });
+  revalidatePath(`/g/${str(form, "group_id")}`, "layout");
+  return toFormState(result);
+}

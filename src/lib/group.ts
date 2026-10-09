@@ -52,3 +52,10 @@ export function todayIn(timezone: string, now = new Date()): string {
 export function serverNow(): string {
   return new Date().toISOString();
 }
+
+/** YYYY-MM-DD + n дней (календарная арифметика без часовых поясов). */
+export function addDays(day: string, n: number): string {
+  const d = new Date(`${day}T00:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + n);
+  return d.toISOString().slice(0, 10);
+}
