@@ -24,7 +24,8 @@
     "load-test": "node scripts/load-test.mjs",
     "stack:setup": "scripts/local-stack/setup.sh",
     "stack:start": "scripts/local-stack/start.sh",
-    "stack:stop": "scripts/local-stack/stop.sh"
+    "stack:stop": "scripts/local-stack/stop.sh",
+    "export:screens": "node scripts/export-screens.mjs demo/orle-screens.html"
   },
   "dependencies": {
     "@radix-ui/react-slot": "1.4.0",
