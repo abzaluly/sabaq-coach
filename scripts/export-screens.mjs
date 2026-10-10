@@ -108,7 +108,6 @@ pathMap[timur.href] = "profile-timur";
 pathMap[`/g/${g}/leaderboard?scope=all`] = "leaderboard-all";
 pathMap[`/g/${g}/leaderboard?scope=season`] = "leaderboard";
 
-const esc = (s) => s.replaceAll("&", "&amp;").replaceAll('"', "&quot;");
 const frameDoc = (s) =>
   `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><style>${css}</style></head><body class="min-h-dvh font-sans antialiased">${s.body}<script>
 document.addEventListener("click",function(e){var a=e.target.closest("a[data-path]");if(a){e.preventDefault();parent.postMessage({orle:a.getAttribute("data-path")},"*");}var b=e.target.closest("button");if(b&&!a){e.preventDefault();}},true);
